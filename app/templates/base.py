@@ -25,14 +25,16 @@ def base(title: str, body: str, extra_js: str = "") -> str:
   100% {{ transform:scale(1); }}
 }}
 </style>
+<script>
+/* ── SHARED GAME ENGINE ── (loaded in head) */
+{SHARED_JS}
+</script>
 </head>
 <body>
 <canvas id="bgcanvas"></canvas>
 <div id="page-veil"></div>
 {body}
 <script>
-/* ── SHARED GAME ENGINE ── (loaded first, before any page script) */
-{SHARED_JS}
 
 /* ── AMBIENT BACKGROUND GLOW ── */
 (function() {{

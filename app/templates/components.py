@@ -195,12 +195,14 @@ def boss_section(mission_id: int, boss_emoji: str, boss_name: str,
     if (hp && !answered) hp.classList.add('show');
   }}, 20000);
 
-  /* Countdown timer — starts after SHARED_JS loaded */
-  startTimer(60, function() {{
-    if (!answered) {{
-      var first = buttons[0];
-      if (first) first.click();
-    }}
+  /* Countdown timer — starts when DOM is ready */
+  document.addEventListener('DOMContentLoaded', function() {{
+    startTimer(60, function() {{
+      if (!answered) {{
+        var first = buttons[0];
+        if (first) first.click();
+      }}
+    }});
   }});
 
 }})();

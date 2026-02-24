@@ -8,13 +8,6 @@ _QUIZ  = {q.mission_id: q for q in QUIZZES}
 _M     = {m.id: m         for m in MISSIONS}
 
 
-# Shared quiz data dict injected into every page
-_QUIZ_JS = """
-window.QUIZ_WIN  = {QUIZ_WIN_PH};
-window.QUIZ_LOSE = {QUIZ_LOSE_PH};
-window.QUIZ_HINT = {QUIZ_HINT_PH};
-"""
-
 def _quiz_data_js() -> str:
     win_map  = {q.mission_id: q.win_text  for q in QUIZZES}
     lose_map = {q.mission_id: q.lose_text for q in QUIZZES}
@@ -38,7 +31,10 @@ def render_mission(idx: int) -> str:
     # Mission-specific teaching content
     content_blocks = _MISSION_CONTENT.get(idx, "")
 
-    body = hud(quit_href="map.html") + f"""
+    # Injected data script BEFORE HUD/components
+    data_html = f"<script>{_quiz_data_js()}</script>"
+
+    body = data_html + hud(quit_href="map.html") + f"""
 <div class="page-wrap">
   <div class="mission-hdr">
     <div>
@@ -59,8 +55,8 @@ def render_mission(idx: int) -> str:
   )}
 </div>"""
 
-    extra_js = _quiz_data_js()
-    return base(m.name, body, extra_js)
+    # extra_js is now empty as data is at top, but we keep the parameter for base() compatibility
+    return base(m.name, body, "")
 
 
 # ── Per-mission educational content ────────────────────────────
