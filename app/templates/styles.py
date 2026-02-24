@@ -696,18 +696,7 @@ body::after {
   to  { text-shadow:0 0 55px rgba(255,230,0,.9),0 0 90px rgba(255,230,0,.5); }
 }
 .win-sub { font-size:13px; color:var(--muted); letter-spacing:2px; margin-bottom:28px; }
-.name-input {
-  background:rgba(0,229,255,.05); border:1px solid rgba(0,229,255,.22);
-  color:var(--white); padding:12px 20px; font-size:1.1rem;
-  text-align:center; border-radius:2px;
-  width:100%; max-width:300px; outline:none;
-  font-family:var(--font-h); letter-spacing:2px;
-}
-.cert-name {
-  font-family:var(--font-h); font-size:1.6rem; color:var(--cyan);
-  margin-top:12px; letter-spacing:3px;
-  text-shadow:0 0 18px rgba(0,229,255,.4);
-}
+.win-sub { font-size:13px; color:var(--muted); letter-spacing:2px; margin-bottom:28px; }
 .stats-row {
   display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
   gap:12px; margin:24px 0;
