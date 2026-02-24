@@ -26,6 +26,8 @@ def base(title: str, body: str, extra_js: str = "") -> str:
 </head>
 <body>
   <canvas id="bgcanvas"></canvas>
+  <div id="page-veil"></div>
+  <div id="scan-sweep"></div>
   {body}
   <script>
     /* ── SHARED JS (state, utils, sound) ── */

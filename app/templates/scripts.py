@@ -277,4 +277,27 @@ function startTimer(seconds, onExpire) {
 function stopTimer() {
   clearInterval(_timerInterval);
 }
+
+/* ── PAGE TRANSITIONS ───────────────────────────────────────── */
+function navigateTo(url) {
+  var veil = document.getElementById('page-veil');
+  if (veil) {
+    veil.classList.add('closing');
+    setTimeout(function() { window.location.href = url; }, 320);
+  } else {
+    window.location.href = url;
+  }
+}
+
+/* Intercept all same-origin link clicks */
+document.addEventListener('click', function(e) {
+  var a = e.target.closest('a[href]');
+  if (!a) return;
+  var href = a.getAttribute('href');
+  if (!href || href.startsWith('#') || href.startsWith('javascript') || href.startsWith('mailto')) return;
+  /* Only intercept relative / same-origin links */
+  if (href.startsWith('http') && !href.startsWith(window.location.origin)) return;
+  e.preventDefault();
+  navigateTo(href);
+});
 """
