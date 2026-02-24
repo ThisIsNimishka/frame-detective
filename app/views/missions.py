@@ -1,4 +1,5 @@
 """app/views/missions.py — One render function per mission."""
+import json
 from app.templates.base import base
 from app.templates.components import hud, briefing, card, pipeline, boss_section
 from app.models import MISSIONS, QUIZZES
@@ -12,13 +13,10 @@ def _quiz_data_js() -> str:
     win_map  = {q.mission_id: q.win_text  for q in QUIZZES}
     lose_map = {q.mission_id: q.lose_text for q in QUIZZES}
     hint_map = {q.mission_id: q.hint      for q in QUIZZES}
-    def js_obj(d):
-        pairs = ",".join(f'{k}:{repr(v)}' for k, v in d.items())
-        return "{" + pairs + "}"
     return (
-        f"window.QUIZ_WIN  = {js_obj(win_map)};\n"
-        f"window.QUIZ_LOSE = {js_obj(lose_map)};\n"
-        f"window.QUIZ_HINT = {js_obj(hint_map)};\n"
+        f"window.QUIZ_WIN  = {json.dumps(win_map)};\n"
+        f"window.QUIZ_LOSE = {json.dumps(lose_map)};\n"
+        f"window.QUIZ_HINT = {json.dumps(hint_map)};\n"
     )
 
 
@@ -55,7 +53,6 @@ def render_mission(idx: int) -> str:
   )}
 </div>"""
 
-    # extra_js is now empty as data is at top, but we keep the parameter for base() compatibility
     return base(m.name, body, "")
 
 

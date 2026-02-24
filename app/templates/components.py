@@ -1,6 +1,7 @@
 """app/templates/components.py — HTML components for Frame Detective."""
 
-from app.models import MISSIONS, QUIZZES
+import json
+from app.models import MISSIONS
 
 
 # ── HUD ───────────────────────────────────────────────────────
@@ -96,6 +97,7 @@ def boss_section(mission_id: int, boss_emoji: str, boss_name: str,
 
     labels    = ["A", "B", "C", "D"]
     opts_html = ""
+    # options is list of (text, correct)
     for i, (text, correct) in enumerate(options):
         label = labels[i] if i < len(labels) else str(i + 1)
         dc    = "1" if correct else "0"
@@ -106,108 +108,22 @@ def boss_section(mission_id: int, boss_emoji: str, boss_name: str,
             f'</button>'
         )
 
+    hint_panel = ""
     if hint:
-        hint_html = (
+        hint_panel = (
             f'<div id="hint-panel" class="hint-panel">'
             f'<span class="hint-label">💡 HINT</span>'
             f'<span class="hint-body">{hint}</span>'
             f'</div>'
         )
-    else:
-        hint_html = ""
 
+    fact_content = ""
     if fun_fact:
-        fact_html = f'<div style="margin-top:10px;padding:10px;border-left:2px solid var(--purple);font-size:13px;color:rgba(224,240,255,.75)">🔬 <strong>FUN FACT:</strong> {fun_fact}</div>'
-    else:
-        fact_html = ""
+        fact_content = f'<div style="margin-top:10px;padding:10px;border-left:2px solid var(--purple);font-size:13px;color:rgba(224,240,255,.75)">🔬 <strong>FUN FACT:</strong> {fun_fact}</div>'
 
-    quiz_js = f"""
-/* All functions from SHARED_JS are available here (same <script> block in base.py) */
-(function() {{
-  var MID      = {mission_id};
-  var NEXT     = '{next_page}';
-  var BASE_XP  = {mission_xp};
-  var answered = false;
-  var t0       = Date.now();
-
-  /* Wire up option buttons */
-  var buttons = document.querySelectorAll('.qbtn');
-  buttons.forEach(function(btn) {{
-    btn.addEventListener('click', function() {{ handleAnswer(btn); }});
-  }});
-
-  /* Keyboard shortcuts: A B C D or 1 2 3 4 */
-  document.addEventListener('keydown', function(e) {{
-    if (answered) return;
-    var map = {{'a':0,'b':1,'c':2,'d':3,'1':0,'2':1,'3':2,'4':3}};
-    var idx = map[e.key.toLowerCase()];
-    if (idx !== undefined && buttons[idx]) buttons[idx].click();
-  }});
-
-  function handleAnswer(btn) {{
-    if (answered) return;
-    answered = true;
-    stopTimer();
-
-    var correct  = btn.getAttribute('data-correct') === '1';
-    var elapsed  = (Date.now() - t0) / 1000;
-    var speedBonus = elapsed < 30 ? 25 : 0;
-    var fb  = document.getElementById('quiz-feedback');
-    var nx  = document.getElementById('next-bar');
-    var bhr = document.getElementById('boss-hp-bar');
-
-    /* Lock all buttons */
-    buttons.forEach(function(b) {{
-      b.disabled = true;
-      if (b.getAttribute('data-correct') === '1') b.classList.add('correct');
-    }});
-
-    if (correct) {{
-      btn.classList.add('correct');
-      var earned = BASE_XP + 50 + speedBonus;
-      addXP(earned);
-      incrementStreak();
-      markDone(MID, 0);
-      if (bhr) bhr.style.width = '0%';
-      spawnParticles(btn.getBoundingClientRect().left + btn.offsetWidth / 2,
-                     btn.getBoundingClientRect().top  + window.scrollY,
-                     28, ['#39ff14','#ffe600','#00e5ff','#ffffff']);
-      fb.className = 'quiz-feedback win';
-      fb.style.display = 'block';
-      fb.innerHTML = '<strong>✅ CORRECT!</strong>' +
-        (speedBonus ? ' <span style="color:var(--yellow)">⚡ +' + speedBonus + ' SPEED BONUS!</span>' : '') +
-        '<br>' + (window.QUIZ_WIN[MID] || '') + '{fact_html}';
-    }} else {{
-      btn.classList.add('wrong');
-      loseHP();
-      markDone(MID, 0);
-      fb.className = 'quiz-feedback lose';
-      fb.style.display = 'block';
-      fb.innerHTML = '<strong>❌ WRONG.</strong><br>' + (window.QUIZ_LOSE[MID] || '') + '{fact_html}';
-    }}
-
-    if (nx) nx.style.display = 'block';
-  }}
-
-  /* Hint reveal after 20 s */
-  var _hintTimer = setTimeout(function() {{
-    var hp = document.getElementById('hint-panel');
-    if (hp && !answered) hp.classList.add('show');
-  }}, 20000);
-
-  /* Countdown timer — starts when DOM is ready */
-  document.addEventListener('DOMContentLoaded', function() {{
-    startTimer(60, function() {{
-      if (!answered) {{
-        var first = buttons[0];
-        if (first) first.click();
-      }}
-    }});
-  }});
-
-}})();
-"""
-
+    # Convert options to simplified JSON for the engine
+    quiz_data = [{"correct": c} for t, c in options]
+    
     return f"""
 <div class="panel boss-arena" id="boss-arena">
   <div class="boss-header">
@@ -230,12 +146,25 @@ def boss_section(mission_id: int, boss_emoji: str, boss_name: str,
 
   <div class="question-text">{question}</div>
   <div class="options">{opts_html}</div>
-  {hint_html}
+  {hint_panel}
   <div id="quiz-feedback" class="quiz-feedback"></div>
   <div id="next-bar" class="next-bar">
     <a href="{next_page}" class="btn btn-green">NEXT MISSION →</a>
   </div>
 </div>
 <script>
-{quiz_js}
+/* Call centralized engine with JSON data */
+(function() {{
+  var options = {json.dumps(quiz_data)};
+  var fact    = {json.dumps(fact_content)};
+  
+  function start() {{
+    if (window.initQuiz) {{
+      initQuiz({mission_id}, options, "{next_page}", {mission_xp}, fact);
+    }} else {{
+      setTimeout(start, 50); // Engine might still be loading in head
+    }}
+  }}
+  start();
+}})();
 </script>"""
