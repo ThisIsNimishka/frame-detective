@@ -862,4 +862,107 @@ a{color:inherit;text-decoration:none;}
   transition:all .15s;
 }
 .btn-danger:hover{background:rgba(255,32,64,.15);border-color:var(--red);box-shadow:0 0 20px rgba(255,32,64,.3);}
+
+/* ════════════════════════════════════════════════════════════
+   MISSING BUTTON VARIANTS  (used in win.py, index.py, missions)
+═════════════════════════════════════════════════════════════*/
+.btn-green{
+  font-family:var(--font-game);font-size:11px;color:#030810;
+  background:linear-gradient(135deg,var(--green2),var(--green));
+  border:none;padding:14px 36px;border-radius:2px;
+  cursor:pointer;letter-spacing:3px;font-weight:900;
+  box-shadow:0 0 30px rgba(57,255,20,.5),0 3px 0 var(--green3);
+  clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);
+  transition:all .15s;display:inline-block;text-decoration:none;
+}
+.btn-green:hover{transform:translateY(-2px);box-shadow:0 0 50px rgba(57,255,20,.8);}
+
+.btn-yellow{
+  font-family:var(--font-game);font-size:11px;color:#030810;
+  background:linear-gradient(135deg,var(--gold2),var(--yellow));
+  border:none;padding:14px 36px;border-radius:2px;
+  cursor:pointer;letter-spacing:3px;font-weight:900;
+  box-shadow:0 0 30px rgba(255,230,0,.5),0 3px 0 rgba(100,80,0,.8);
+  clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);
+  transition:all .15s;display:inline-block;text-decoration:none;
+}
+.btn-yellow:hover{transform:translateY(-2px);box-shadow:0 0 50px rgba(255,230,0,.8);}
+
+/* ════════════════════════════════════════════════════════════
+   WIN SCREEN — stat items
+═════════════════════════════════════════════════════════════*/
+.stat-item{
+  background:rgba(4,10,22,.85);border:1px solid rgba(0,232,255,.1);
+  border-radius:2px;padding:16px;text-align:center;
+  position:relative;overflow:visible;
+}
+.stat-item::before{
+  content:'';position:absolute;inset:-1px;pointer-events:none;
+  background:
+    linear-gradient(var(--cyan),var(--cyan)) top    left  /10px 1px,
+    linear-gradient(var(--cyan),var(--cyan)) top    left  /1px 10px,
+    linear-gradient(var(--cyan),var(--cyan)) bottom right /10px 1px,
+    linear-gradient(var(--cyan),var(--cyan)) bottom right /1px 10px;
+  background-repeat:no-repeat;opacity:.35;
+}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin:20px 0;}
+.stat-val{font-family:var(--font-game);font-size:22px;color:var(--cyan);font-weight:900;}
+.stat-lbl{font-size:10px;color:var(--mid);letter-spacing:2px;margin-top:4px;}
+
+/* cert wrap */
+.cert-wrap{text-align:center;padding:30px;width:100%;max-width:640px;}
+.cert-stamp{animation:pageEnter .6s cubic-bezier(.16,1,.3,1) both;}
+
+/* ════════════════════════════════════════════════════════════
+   TIMER LABEL  (used inside timer-wrap)
+═════════════════════════════════════════════════════════════*/
+.timer-lbl{font-family:var(--font-game);font-size:9px;color:var(--mid);letter-spacing:2px;flex-shrink:0;}
+
+/* ════════════════════════════════════════════════════════════
+   RADAR RINGS (r1 / r2 / r3 used in index.py)
+═════════════════════════════════════════════════════════════*/
+.radar-ring{
+  position:absolute;border-radius:50%;
+  border:1px solid rgba(0,232,255,.12);
+}
+.radar-ring.r1{inset:0;animation:radarSpin 14s linear infinite;}
+.radar-ring.r2{inset:30px;animation:radarSpin 9s linear infinite reverse;}
+.radar-ring.r3{inset:60px;animation:radarSpin 20s linear infinite;}
+/* The sweep arm — on r1 only */
+.radar-ring.r1::after{
+  content:'';position:absolute;top:50%;left:50%;
+  width:50%;height:1px;
+  background:linear-gradient(90deg,rgba(0,232,255,.5),transparent);
+  transform-origin:left center;
+  animation:radarSpin 4s linear infinite;
+}
+@keyframes radarSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+/* ════════════════════════════════════════════════════════════
+   TITLE LOGO  (bigger, more impactful game font)
+═════════════════════════════════════════════════════════════*/
+.title-logo{
+  font-family:var(--font-game);
+  font-size:clamp(22px,6vw,38px);
+  font-weight:900;line-height:1.1;letter-spacing:6px;
+  color:var(--white);
+  text-shadow:0 0 40px rgba(0,232,255,.7),0 0 80px rgba(0,232,255,.3);
+  text-align:center;
+}
+
+/* ════════════════════════════════════════════════════════════
+   IMPROVED FONT SIZES  — game-quality readability
+═════════════════════════════════════════════════════════════*/
+/* Bigger boss name */
+.boss-name{font-size:clamp(16px,3vw,22px) !important;}
+/* Bigger question text */
+.q-text{font-size:clamp(13px,2vw,16px) !important;padding:20px 28px !important;}
+/* Bigger quiz options */
+.qbtn{font-size:clamp(11px,1.6vw,13px) !important;padding:16px 22px !important;}
+/* Bigger card title */
+.card-ttl{font-size:clamp(14px,2.2vw,18px) !important;}
+/* Bigger card text */
+.card p{font-size:clamp(13px,1.8vw,15px) !important;line-height:1.8 !important;}
+/* Bigger mission name */
+.mission-name{font-size:clamp(16px,3vw,22px) !important;}
 """

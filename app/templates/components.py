@@ -179,7 +179,7 @@ def boss_section(mission_id: int, boss_emoji: str, boss_name: str,
         dc    = '1' if correct else '0'
         opts_html += (
             f'<button class="qbtn" data-correct="{dc}" onclick="doAnswer(this)">'
-            f'<span class="qkey">{label}</span>'
+            f'<span class="q-lbl">{label}</span>'
             f'<span>{text}</span>'
             f'</button>'
         )
@@ -188,6 +188,9 @@ def boss_section(mission_id: int, boss_emoji: str, boss_name: str,
     fun_html  = f'<div class="fun-fact">🔬 <strong>FUN FACT:</strong> {fun_fact}</div>' if fun_fact else ''
 
     quiz_js = f"""
+/* Wrap in load event so SHARED_JS functions are available */
+window.addEventListener('load', function() {{
+
 var _mid  = {mission_id};
 var _mxp  = {mission_xp};
 var _next = '{next_page}';
@@ -210,19 +213,18 @@ function doAnswer(btn) {{
 
   if (isCorrect) {{
     btn.classList.add('ok');
-    var elapsed  = (Date.now() - _t0) / 1000;
-    var bonus    = elapsed < 30 ? 25 : 0;
-    var totalXP  = {mission_xp} + 50 + bonus;
-    addXP(totalXP);
+    var elapsed = (Date.now() - _t0) / 1000;
+    var bonus   = elapsed < 30 ? 25 : 0;
+    addXP({mission_xp} + 50 + bonus);
     incrementStreak();
-    markDone(_mid, 0);   // mission xp already added above
-    spawnParticles(btn.offsetLeft + btn.offsetWidth/2,
-                   btn.getBoundingClientRect().top + window.scrollY,
-                   28, ['#39ff14','#ffe600','#00f5ff','#ffffff']);
+    markDone(_mid, 0);
+    spawnParticles(
+      btn.getBoundingClientRect().left + btn.offsetWidth / 2,
+      btn.getBoundingClientRect().top  + window.scrollY,
+      28, ['#39ff14','#ffe600','#00e8ff','#ffffff']);
     playSound('boss_defeated');
-    /* drain boss HP bar */
     var bh = document.getElementById('boss-hpfill');
-    if (bh) {{ bh.style.width='0%'; }}
+    if (bh) bh.style.width = '0%';
     fb.className = 'qfb win';
     fb.innerHTML = '<strong>✅ CORRECT!</strong>' +
       (bonus ? ' <span style="color:var(--yellow)">⚡ +' + bonus + ' SPEED BONUS!</span>' : '') +
@@ -236,24 +238,24 @@ function doAnswer(btn) {{
   }}
 
   fb.style.display = 'block';
-  if (nx) {{ nx.style.display = 'block'; nx.classList.add('show'); }}
+  if (nx) {{ nx.style.display = 'block'; }}
 }}
 
-/* keyboard shortcuts A B C D */
+/* expose so onclick attribute can call it */
+window.doAnswer = doAnswer;
+
+/* keyboard A B C D */
 document.addEventListener('keydown', function(e) {{
   var map = {{'a':0,'b':1,'c':2,'d':3,'1':0,'2':1,'3':2,'4':3}};
   var idx = map[e.key.toLowerCase()];
-  if (idx !== undefined) {{
-    var opts = document.querySelectorAll('.qbtn:not(.done)');
-    var all  = document.querySelectorAll('.qbtn');
-    if (!document.getElementById('q-opts').classList.contains('done') && all[idx]) {{
-      all[idx].click();
-    }}
+  if (idx !== undefined && !document.getElementById('q-opts').classList.contains('done')) {{
+    var all = document.querySelectorAll('.qbtn');
+    if (all[idx]) all[idx].click();
   }}
 }});
 
-/* hint timer */
-var _hintTimer = setTimeout(function() {{
+/* hint reveal after 20 s */
+setTimeout(function() {{
   var hb = document.getElementById('hint-box');
   if (hb && !document.getElementById('q-opts').classList.contains('done')) {{
     hb.classList.add('show');
@@ -261,29 +263,27 @@ var _hintTimer = setTimeout(function() {{
   }}
 }}, 20000);
 
-/* Start countdown timer */
+/* countdown timer */
 startTimer(60, function() {{
-  /* Time's up — force loss if not answered */
   if (!document.getElementById('q-opts').classList.contains('done')) {{
-    var first = document.querySelector('.qbtn');
-    if (first) {{
-      document.getElementById('q-opts').classList.add('done');
-      document.querySelectorAll('.qbtn').forEach(function(b) {{
-        b.classList.add('done');
-        if (b.getAttribute('data-correct') === '1') b.classList.add('ok');
-        else b.classList.add('bad');
-      }});
-      loseHP();
-      markDone(_mid, 0);
-      var fb = document.getElementById('q-fb');
-      var nx = document.getElementById('next-banner');
-      fb.className = 'qfb lose';
-      fb.innerHTML = '⏰ <strong>TIME UP!</strong> ' + (QUIZ_LOSE[_mid] || '');
-      fb.style.display = 'block';
-      if (nx) {{ nx.style.display='block'; nx.classList.add('show'); }}
-    }}
+    document.getElementById('q-opts').classList.add('done');
+    document.querySelectorAll('.qbtn').forEach(function(b) {{
+      b.classList.add('done');
+      if (b.getAttribute('data-correct') === '1') b.classList.add('ok');
+      else b.classList.add('bad');
+    }});
+    loseHP();
+    markDone(_mid, 0);
+    var fb = document.getElementById('q-fb');
+    var nx = document.getElementById('next-banner');
+    fb.className = 'qfb lose';
+    fb.innerHTML = '⏰ <strong>TIME UP!</strong> ' + (QUIZ_LOSE[_mid] || '');
+    fb.style.display = 'block';
+    if (nx) nx.style.display = 'block';
   }}
 }});
+
+}});  /* end window.load */
 """
 
 
@@ -301,18 +301,18 @@ startTimer(60, function() {{
     </div>
   </div>
 
-  <div class="quiz-timer-wrap">
-    <span class="quiz-timer-lbl">TIME</span>
-    <div class="quiz-timer-bar"><div class="quiz-timer-fill" id="timer-fill" style="width:100%"></div></div>
-    <span class="quiz-timer-num" id="timer-num">60</span>
+  <div class="timer-wrap">
+    <span class="timer-lbl">TIME</span>
+    <div class="timer-bar"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+    <span class="timer-num" id="timer-num">60</span>
   </div>
 
-  <div class="q-txt">{question}</div>
-  <div class="q-opts" id="q-opts">{opts_html}</div>
+  <div class="q-text">{question}</div>
+  <div id="q-opts">{opts_html}</div>
   {hint_html}
   <div class="qfb" id="q-fb" style="display:none"></div>
-  <div class="next-banner" id="next-banner">
-    <a href="{next_page}" class="btn-green" onclick="playSound('click')">NEXT MISSION →</a>
+  <div id="next-banner" style="display:none;padding:16px 20px;border-top:1px solid rgba(0,232,255,.1);text-align:center;">
+    <a href="{next_page}" class="next-btn">NEXT MISSION →</a>
   </div>
 </div>
 <script>{quiz_js}</script>"""
