@@ -1,318 +1,239 @@
-"""
-app/templates/components.py
-----------------------------
-Pure functions → HTML string snippets.
+"""app/templates/components.py — HTML components for Frame Detective."""
 
-KEY FIX: hud() no longer has an inline <script>renderHUD()</script>
-         That call now lives at the bottom of base.py AFTER all JS loads.
-"""
 from app.models import MISSIONS, QUIZZES
 
 
-# ─────────────────────────────────────────────────────────────
-# HUD
-# ─────────────────────────────────────────────────────────────
-def hud() -> str:
-    badges = "".join(
-        f'<span id="bdg{m.id}" class="bdg locked" title="{m.badge_name}">{m.badge}</span>'
+# ── HUD ───────────────────────────────────────────────────────
+def hud(quit_href: str = "/") -> str:
+    badges_html = "".join(
+        f'<span id="bdg{m.id}" class="hud-badge-icon locked" title="{m.badge_name}">{m.badge}</span>'
         for m in MISSIONS
     )
     return f"""
-<div class="hud">
-  <span class="hud-logo">🕵️ FD</span>
-  <span class="hud-div">│</span>
-  <span class="hud-lvl" id="hud-lvl">LVL 1</span>
-  <div class="xp-wrap">
-    <span class="xp-lbl">XP</span>
-    <div class="xp-bar"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
-    <span class="xp-num" id="xp-num">0 / 200 XP</span>
+<nav class="hud" id="main-hud">
+  <div class="hud-logo">FRAME<br>DETECTIVE</div>
+  <div class="hud-sep">|</div>
+  <div id="hud-lvl" class="hud-badge">LVL 1</div>
+  <div class="hud-sep">|</div>
+  <div class="xp-group">
+    <span class="xp-label">XP</span>
+    <div class="xp-bar"><div id="xp-fill" style="width:0%"></div></div>
+    <span class="xp-val" id="xp-num">0 XP</span>
   </div>
-  <div class="hp-wrap">
-    <span class="hp-lbl">HP</span>
+  <div class="hud-sep">|</div>
+  <div class="hp-group">
+    <span class="hp-label">HP</span>
     <div class="hearts">
-      <span class="ht" id="ht0">❤️</span>
-      <span class="ht" id="ht1">❤️</span>
-      <span class="ht" id="ht2">❤️</span>
+      <span id="ht0" class="heart">♥</span>
+      <span id="ht1" class="heart">♥</span>
+      <span id="ht2" class="heart">♥</span>
     </div>
   </div>
-  <span class="streak-num" id="hud-streak"></span>
-  <div class="badges">{badges}</div>
-  <a href="map.html" class="hud-quit" onclick="playSound('click')">⬅ MAP</a>
+  <div class="hud-sep">|</div>
+  <div class="streak">
+    <span class="streak-label">🔥</span>
+    <span id="hud-streak">0</span>
+  </div>
+  <div class="hud-sep">|</div>
+  <div class="hud-badges">{badges_html}</div>
+  <div class="hud-sep">|</div>
+  <a href="{quit_href}" class="hud-quit">✕ QUIT</a>
+</nav>"""
+
+
+# ── BRIEFING ──────────────────────────────────────────────────
+def briefing(speaker: str, text: str) -> str:
+    return f"""
+<div class="briefing">
+  <span class="briefing-speaker">▸ {speaker}</span>
+  <span class="briefing-text" data-tw="{text}"></span>
 </div>"""
 
 
-# ─────────────────────────────────────────────────────────────
-# BRIEFING
-# ─────────────────────────────────────────────────────────────
-def briefing(speaker: str, text: str) -> str:
-    """Render a case-file briefing block.
-
-    If `text` contains HTML tags the typewriter effect is skipped entirely
-    (HTML inside a data-* attribute gets entity-encoded by the browser which
-    makes the raw tag text visible).  Plain-text strings still get the
-    typewriter animation.
-    """
-    import re as _re
-    has_html = bool(_re.search(r'<[a-zA-Z/]', text))
-    if has_html:
-        inner = f'<span>{text}</span>'
-    else:
-        # Escape any quotes so they don't break the attribute
-        safe = text.replace('"', '&quot;').replace("'", '&#39;')
-        inner = f'<span data-tw="{safe}">{text}</span>'
-    return (
-        f'<div class="cutscene blk">'
-        f'<span class="spkr">{speaker}</span>'
-        f'{inner}'
-        f'</div>'
-    )
-
-
-
-# ─────────────────────────────────────────────────────────────
-# CARD
-# ─────────────────────────────────────────────────────────────
+# ── CARD ──────────────────────────────────────────────────────
 def card(label: str, title: str, body_html: str) -> str:
-    return (
-        f'<div class="card blk">'
-        f'<span class="card-lbl">{label}</span>'
-        f'<h3>{title}</h3>'
-        f'{body_html}'
-        f'</div>'
-    )
+    return f"""
+<div class="panel">
+  <div class="panel-head"><span class="panel-title">{label}</span></div>
+  <div class="panel-head" style="padding-top:10px;padding-bottom:10px;border-bottom:none;">
+    <span style="font-family:var(--font-h);font-size:clamp(13px,2vw,16px);color:var(--white);letter-spacing:1px;">{title}</span>
+  </div>
+  <div class="panel-body">{body_html}</div>
+</div>"""
 
 
-# ─────────────────────────────────────────────────────────────
-# METRIC CARD
-# ─────────────────────────────────────────────────────────────
-def metric_card(kind: str, name: str, plain: str, desc: str, ranges_html: str = "") -> str:
-    return (
-        f'<div class="mc {kind}">'
-        f'<div class="mc-name">{name}</div>'
-        f'<div class="mc-plain">{plain}</div>'
-        f'<div class="mc-desc">{desc}</div>'
-        f'<div class="mc-ranges">{ranges_html}</div>'
-        f'</div>'
-    )
-
-
-def range_tag(cls: str, text: str) -> str:
-    return f'<span class="rt {cls}">{text}</span>'
-
-
-# ─────────────────────────────────────────────────────────────
-# SCENARIO
-# ─────────────────────────────────────────────────────────────
-def scenario(emoji: str, title: str, subtitle: str,
-             signs_html: str, fix_html: str) -> str:
-    return (
-        f'<div class="scenario blk">'
-        f'<div class="sc-head">'
-        f'<span class="sc-em">{emoji}</span>'
-        f'<div><div class="sc-title">{title}</div>'
-        f'<div class="sc-sub">{subtitle}</div></div>'
-        f'</div>'
-        f'<div class="sc-signs">{signs_html}</div>'
-        f'<div class="sc-fix">{fix_html}</div>'
-        f'</div>'
-    )
-
-
-def sign(kind: str, text: str) -> str:
-    return f'<span class="sign {kind}">{text}</span>'
-
-
-# ─────────────────────────────────────────────────────────────
-# PIPELINE VISUAL
-# ─────────────────────────────────────────────────────────────
+# ── PIPELINE ──────────────────────────────────────────────────
 def pipeline() -> str:
     stages = [
-        ("ps-cpu",  "CPU",      "Game Logic",       "MsCPUBusy"),
-        ("ps-wait", "▶▶",       "GPU Queue",        "MsGPULatency"),
-        ("ps-gpu",  "GPU",      "Render",           "MsGPUBusy"),
-        ("ps-disp", "DISPLAY",  "Frame on screen",  "DisplayedTime"),
+        ("🎮", "GAME RUNS",    "0 ms"),
+        ("📊", "PRESENTMON",   "1 ms"),
+        ("🔬", "FRAME DATA",   "16 ms"),
+        ("📈", "ANALYSIS",     "33 ms"),
+        ("🕵️", "DETECTIVE",   "50 ms"),
     ]
-    row = ""
-    for i, (cls, label, sub, metric) in enumerate(stages):
-        row += f'<div id="pst{i}" class="pipe-stage {cls}">'
-        row += f'<strong>{label}</strong><br>'
-        row += f'<small>{sub}</small>'
-        row += f'<small style="color:inherit;opacity:.55">{metric}</small>'
-        row += '</div>'
-        if i < len(stages) - 1:
-            row += '<div class="pipe-arr">→</div>'
-    return f"""<div class="blk pipe-visual">
-  <div class="pipe-label">▸ FRAME PIPELINE — EACH STEP ADDS LATENCY</div>
-  <div class="pipe-row">{row}</div>
-  <div class="pipe-legend">
-    💡 Every millisecond spent here adds to <strong style="color:#00f5ff">MsClickToPhotonLatency</strong>.
-    The pipeline animates to show where time is typically lost.
+    stages_html = ""
+    for i, (icon, name, time) in enumerate(stages):
+        active = "active" if i == 2 else ""
+        stages_html += f"""
+    <div class="pipe-stage {active}">
+      <span class="pipe-icon">{icon}</span>
+      <div class="pipe-name">{name}</div>
+      <div class="pipe-time">{time}</div>
+    </div>"""
+    return f"""
+<div class="panel">
+  <div class="panel-head"><span class="panel-title">▸ DATA PIPELINE</span></div>
+  <div class="pipe-row">{stages_html}
   </div>
-</div>
-<script>
-(function(){{
-  var stages = [0,1,2,3];
-  var cur = 0;
-  function tick(){{
-    stages.forEach(function(i){{document.getElementById('pst'+i).classList.remove('active');}});
-    document.getElementById('pst'+cur).classList.add('active');
-    cur = (cur+1) % stages.length;
-  }}
-  tick(); setInterval(tick, 900);
-}})();
-</script>"""
+</div>"""
 
 
-# ─────────────────────────────────────────────────────────────
-# BOSS SECTION
-# ─────────────────────────────────────────────────────────────
+# ── BOSS / QUIZ SECTION ───────────────────────────────────────
 def boss_section(mission_id: int, boss_emoji: str, boss_name: str,
-                 question: str, options: list[tuple[str, bool]],
-                 next_page: str, mission_xp: int,
+                 question: str, options: list, next_page: str,
+                 mission_xp: int,
                  hint: str = "", fun_fact: str = "") -> str:
 
-    # Build option buttons A B C D
-    labels   = ["A", "B", "C", "D"]
+    labels    = ["A", "B", "C", "D"]
     opts_html = ""
     for i, (text, correct) in enumerate(options):
         label = labels[i] if i < len(labels) else str(i + 1)
-        dc    = '1' if correct else '0'
+        dc    = "1" if correct else "0"
         opts_html += (
-            f'<button class="qbtn" data-correct="{dc}" onclick="doAnswer(this)">'
-            f'<span class="q-lbl">{label}</span>'
+            f'<button class="qbtn" data-correct="{dc}">'
+            f'<span class="key-hint">{label}</span>'
             f'<span>{text}</span>'
             f'</button>'
         )
 
-    hint_html = f'<div id="hint-box" class="hint-box"><span class="hint-lbl">💡 HINT</span>{hint}</div>' if hint else ''
-    fun_html  = f'<div class="fun-fact">🔬 <strong>FUN FACT:</strong> {fun_fact}</div>' if fun_fact else ''
+    if hint:
+        hint_html = (
+            f'<div id="hint-panel" class="hint-panel">'
+            f'<span class="hint-label">💡 HINT</span>'
+            f'<span class="hint-body">{hint}</span>'
+            f'</div>'
+        )
+    else:
+        hint_html = ""
+
+    if fun_fact:
+        fact_html = f'<div style="margin-top:10px;padding:10px;border-left:2px solid var(--purple);font-size:13px;color:rgba(224,240,255,.75)">🔬 <strong>FUN FACT:</strong> {fun_fact}</div>'
+    else:
+        fact_html = ""
 
     quiz_js = f"""
-/* Wrap in load event so SHARED_JS functions are available */
-window.addEventListener('load', function() {{
+/* All functions from SHARED_JS are available here (same <script> block in base.py) */
+(function() {{
+  var MID      = {mission_id};
+  var NEXT     = '{next_page}';
+  var BASE_XP  = {mission_xp};
+  var answered = false;
+  var t0       = Date.now();
 
-var _mid  = {mission_id};
-var _mxp  = {mission_xp};
-var _next = '{next_page}';
-var _t0   = Date.now();
-
-function doAnswer(btn) {{
-  if (document.getElementById('q-opts').classList.contains('done')) return;
-  stopTimer();
-
-  var isCorrect = btn.getAttribute('data-correct') === '1';
-  var opts      = document.querySelectorAll('.qbtn');
-  var fb        = document.getElementById('q-fb');
-  var nx        = document.getElementById('next-banner');
-
-  document.getElementById('q-opts').classList.add('done');
-  opts.forEach(function(b) {{
-    b.classList.add('done');
-    if (b.getAttribute('data-correct') === '1') b.classList.add('ok');
+  /* Wire up option buttons */
+  var buttons = document.querySelectorAll('.qbtn');
+  buttons.forEach(function(btn) {{
+    btn.addEventListener('click', function() {{ handleAnswer(btn); }});
   }});
 
-  if (isCorrect) {{
-    btn.classList.add('ok');
-    var elapsed = (Date.now() - _t0) / 1000;
-    var bonus   = elapsed < 30 ? 25 : 0;
-    addXP({mission_xp} + 50 + bonus);
-    incrementStreak();
-    markDone(_mid, 0);
-    spawnParticles(
-      btn.getBoundingClientRect().left + btn.offsetWidth / 2,
-      btn.getBoundingClientRect().top  + window.scrollY,
-      28, ['#39ff14','#ffe600','#00e8ff','#ffffff']);
-    playSound('boss_defeated');
-    var bh = document.getElementById('boss-hpfill');
-    if (bh) bh.style.width = '0%';
-    fb.className = 'qfb win';
-    fb.innerHTML = '<strong>✅ CORRECT!</strong>' +
-      (bonus ? ' <span style="color:var(--yellow)">⚡ +' + bonus + ' SPEED BONUS!</span>' : '') +
-      '<br>' + (QUIZ_WIN[_mid] || '') + '{fun_html}';
-  }} else {{
-    btn.classList.add('bad');
-    loseHP();
-    markDone(_mid, 0);
-    fb.className = 'qfb lose';
-    fb.innerHTML = '<strong>❌ WRONG.</strong><br>' + (QUIZ_LOSE[_mid] || '') + '{fun_html}';
-  }}
+  /* Keyboard shortcuts: A B C D or 1 2 3 4 */
+  document.addEventListener('keydown', function(e) {{
+    if (answered) return;
+    var map = {{'a':0,'b':1,'c':2,'d':3,'1':0,'2':1,'3':2,'4':3}};
+    var idx = map[e.key.toLowerCase()];
+    if (idx !== undefined && buttons[idx]) buttons[idx].click();
+  }});
 
-  fb.style.display = 'block';
-  if (nx) {{ nx.style.display = 'block'; }}
-}}
+  function handleAnswer(btn) {{
+    if (answered) return;
+    answered = true;
+    stopTimer();
 
-/* expose so onclick attribute can call it */
-window.doAnswer = doAnswer;
+    var correct  = btn.getAttribute('data-correct') === '1';
+    var elapsed  = (Date.now() - t0) / 1000;
+    var speedBonus = elapsed < 30 ? 25 : 0;
+    var fb  = document.getElementById('quiz-feedback');
+    var nx  = document.getElementById('next-bar');
+    var bhr = document.getElementById('boss-hp-bar');
 
-/* keyboard A B C D */
-document.addEventListener('keydown', function(e) {{
-  var map = {{'a':0,'b':1,'c':2,'d':3,'1':0,'2':1,'3':2,'4':3}};
-  var idx = map[e.key.toLowerCase()];
-  if (idx !== undefined && !document.getElementById('q-opts').classList.contains('done')) {{
-    var all = document.querySelectorAll('.qbtn');
-    if (all[idx]) all[idx].click();
-  }}
-}});
-
-/* hint reveal after 20 s */
-setTimeout(function() {{
-  var hb = document.getElementById('hint-box');
-  if (hb && !document.getElementById('q-opts').classList.contains('done')) {{
-    hb.classList.add('show');
-    playSound('hint');
-  }}
-}}, 20000);
-
-/* countdown timer */
-startTimer(60, function() {{
-  if (!document.getElementById('q-opts').classList.contains('done')) {{
-    document.getElementById('q-opts').classList.add('done');
-    document.querySelectorAll('.qbtn').forEach(function(b) {{
-      b.classList.add('done');
-      if (b.getAttribute('data-correct') === '1') b.classList.add('ok');
-      else b.classList.add('bad');
+    /* Lock all buttons */
+    buttons.forEach(function(b) {{
+      b.disabled = true;
+      if (b.getAttribute('data-correct') === '1') b.classList.add('correct');
     }});
-    loseHP();
-    markDone(_mid, 0);
-    var fb = document.getElementById('q-fb');
-    var nx = document.getElementById('next-banner');
-    fb.className = 'qfb lose';
-    fb.innerHTML = '⏰ <strong>TIME UP!</strong> ' + (QUIZ_LOSE[_mid] || '');
-    fb.style.display = 'block';
+
+    if (correct) {{
+      btn.classList.add('correct');
+      var earned = BASE_XP + 50 + speedBonus;
+      addXP(earned);
+      incrementStreak();
+      markDone(MID, 0);
+      if (bhr) bhr.style.width = '0%';
+      spawnParticles(btn.getBoundingClientRect().left + btn.offsetWidth / 2,
+                     btn.getBoundingClientRect().top  + window.scrollY,
+                     28, ['#39ff14','#ffe600','#00e5ff','#ffffff']);
+      fb.className = 'quiz-feedback win';
+      fb.style.display = 'block';
+      fb.innerHTML = '<strong>✅ CORRECT!</strong>' +
+        (speedBonus ? ' <span style="color:var(--yellow)">⚡ +' + speedBonus + ' SPEED BONUS!</span>' : '') +
+        '<br>' + (window.QUIZ_WIN[MID] || '') + '{fact_html}';
+    }} else {{
+      btn.classList.add('wrong');
+      loseHP();
+      markDone(MID, 0);
+      fb.className = 'quiz-feedback lose';
+      fb.style.display = 'block';
+      fb.innerHTML = '<strong>❌ WRONG.</strong><br>' + (window.QUIZ_LOSE[MID] || '') + '{fact_html}';
+    }}
+
     if (nx) nx.style.display = 'block';
   }}
-}});
 
-}});  /* end window.load */
+  /* Hint reveal after 20 s */
+  var _hintTimer = setTimeout(function() {{
+    var hp = document.getElementById('hint-panel');
+    if (hp && !answered) hp.classList.add('show');
+  }}, 20000);
+
+  /* Countdown timer — starts after SHARED_JS loaded */
+  startTimer(60, function() {{
+    if (!answered) {{
+      var first = buttons[0];
+      if (first) first.click();
+    }}
+  }});
+
+}})();
 """
 
-
     return f"""
-<div class="boss-arena blk">
-  <div class="boss-hdr">
-    <div class="boss-em">{boss_emoji}</div>
-    <div>
+<div class="panel boss-arena" id="boss-arena">
+  <div class="boss-header">
+    <div class="boss-emoji">{boss_emoji}</div>
+    <div class="boss-info">
       <div class="boss-name">{boss_name}</div>
       <div class="boss-sub">Defeat the boss to complete this mission.</div>
-      <div class="boss-hp-wrap">
+      <div class="boss-hp-row">
         <div class="boss-hp-lbl">BOSS HP</div>
-        <div class="boss-hpbg"><div class="boss-hpfill" id="boss-hpfill" style="width:100%"></div></div>
+        <div class="boss-hp-bg"><div class="boss-hp-bar" id="boss-hp-bar"></div></div>
       </div>
     </div>
   </div>
 
-  <div class="timer-wrap">
-    <span class="timer-lbl">TIME</span>
-    <div class="timer-bar"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
-    <span class="timer-num" id="timer-num">60</span>
+  <div class="quiz-timer">
+    <span class="quiz-timer-label">TIME</span>
+    <div class="quiz-timer-bar"><div id="timer-fill" style="width:100%"></div></div>
+    <span class="quiz-timer-count" id="timer-num">60</span>
   </div>
 
-  <div class="q-text">{question}</div>
-  <div id="q-opts">{opts_html}</div>
+  <div class="question-text">{question}</div>
+  <div class="options">{opts_html}</div>
   {hint_html}
-  <div class="qfb" id="q-fb" style="display:none"></div>
-  <div id="next-banner" style="display:none;padding:16px 20px;border-top:1px solid rgba(0,232,255,.1);text-align:center;">
-    <a href="{next_page}" class="next-btn">NEXT MISSION →</a>
+  <div id="quiz-feedback" class="quiz-feedback"></div>
+  <div id="next-bar" class="next-bar">
+    <a href="{next_page}" class="btn btn-green">NEXT MISSION →</a>
   </div>
 </div>
-<script>{quiz_js}</script>"""
+<script>
+{quiz_js}
+</script>"""

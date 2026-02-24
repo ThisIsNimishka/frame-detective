@@ -1,131 +1,99 @@
-# 🕵️ Frame Detective — PresentMon Learning Game
+# Frame Detective 🕵️
 
-A retro-style RPG learning game that teaches Intel PresentMon through 8 missions,
-boss battles, XP, and a certificate of mastery. Built in pure Python — zero external
-runtime dependencies.
+**A cyberpunk quiz game for learning Intel PresentMon frame analysis** — 8 missions, boss battles, XP system, and a Certificate of Mastery.
 
 ---
 
-## Quick Start
+## What Is It?
+
+Frame Detective is a browser-based learning game served locally via Python. You play as a detective solving frame-rate crimes using PresentMon, Intel's open-source frame-analysis tool.
+
+**8 Cases to Crack:**
+| Case | Topic |
+|------|-------|
+| 01 | What Is PresentMon? |
+| 02 | The Frame Pipeline |
+| 03 | Metrics Deep Dive |
+| 04 | Present Modes |
+| 05 | Reading Raw Traces |
+| 06 | Diagnose & Fix |
+| 07 | Graphs & Stats |
+| 08 | The Final Mission |
+
+---
+
+## How to Run
 
 ```bash
+# 1 — Install Python 3.10+
+# 2 — Clone and launch:
 python main.py
+# 3 — Open your browser:
+#     http://localhost:5050
 ```
 
-Opens automatically in your default browser at `http://127.0.0.1:<port>`.  
-Press **Ctrl+C** to quit.
-
-**Requirements:** Python 3.9+
+No external dependencies. No npm. No build step.
 
 ---
 
-## Project Structure
+## Game Features
 
-```
-FrameDetective/
-├── main.py                     # Entry point — run this
-│
-├── app/
-│   ├── server.py               # HTTP server + URL router
-│   │
-│   ├── models/                 # Data layer (pure Python dataclasses)
-│   │   ├── mission.py          # Mission — id, name, badge, XP, boss info
-│   │   └── quiz.py             # Quiz — question, 3 options, win/lose text
-│   │
-│   ├── templates/              # HTML generation layer
-│   │   ├── base.py             # Page shell — wraps every page in DOCTYPE + CSS + JS
-│   │   ├── styles.py           # CSS (inlined into every page)
-│   │   ├── scripts.py          # Shared JS — localStorage state, HUD, XP, HP
-│   │   └── components.py       # Reusable HTML components (HUD, boss, cards...)
-│   │
-│   └── views/                  # Page renderers — one per URL route
-│       ├── __init__.py         # Route registry { path: renderer }
-│       ├── index.py            # / and /index.html — Title screen
-│       ├── map.py              # /map.html — Mission select
-│       ├── missions.py         # /mission-1.html … /mission-8.html
-│       └── win.py              # /win.html — Certificate screen
-│
-├── tests/
-│   └── test_all.py             # 43 unit tests (models, templates, views, server)
-│
-└── requirements.txt
-```
+- 🎮 **8 Boss Battle Quizzes** — 60-second countdown timer, keyboard shortcuts (A/B/C/D)
+- ⚡ **XP & Level System** — earn XP, speed bonuses, level up
+- ❤️ **3 Lives (HP)** — wrong answers cost HP with damage effects
+- 🔥 **Streak Tracker** — build a combo for bonus XP
+- 🏅 **8 Mission Badges** — collected in the HUD
+- 🏆 **Certificate of Mastery** — printable at the end
+- 💡 **Timed Hints** — appear after 20 seconds of inaction
+- ✨ **Particle FX, confetti, screen-shake animations**
+- 🌌 **Animated starfield background** with CRT scanlines
 
 ---
 
 ## Architecture
 
-### Layer separation
-
-| Layer | Responsibility | Files |
-|---|---|---|
-| **Models** | Pure data — no HTML, no rendering | `models/mission.py`, `models/quiz.py` |
-| **Templates** | HTML string builders — no business logic | `templates/*.py` |
-| **Views** | Compose models + templates into full pages | `views/*.py` |
-| **Server** | Route HTTP requests to views | `server.py` |
-
-### Request flow
-
 ```
-Browser GET /mission-3.html
-    └─▶ server.py         looks up route in ROUTES dict
-    └─▶ views/missions.py render_mission(2)
-            ├─▶ models    reads MISSIONS[2], QUIZZES[2]
-            ├─▶ templates/components.py  builds HUD, boss section, content blocks
-            └─▶ templates/base.py        wraps in full HTML shell
-    └─▶ server.py         sends 200 response with HTML bytes
+FD/
+├── main.py                  ← Launch: python main.py
+├── app/
+│   ├── server/              ← Minimal HTTP server (stdlib only)
+│   ├── models/              ← Mission + Quiz data
+│   ├── views/               ← Page renderers (index, map, missions, win)
+│   └── templates/
+│       ├── base.py          ← HTML shell (CSS + JS inline)
+│       ├── styles.py        ← Full CSS (sci-fi cyberpunk theme)
+│       ├── scripts.py       ← Game engine JS (XP, timer, FX)
+│       └── components.py    ← HUD, boss section, briefing, cards
+└── tests/
+    └── test_all.py          ← 53 unit tests
 ```
-
-### State management
-
-Game progress (XP, HP, completed missions) lives in browser **localStorage** — 
-no server-side sessions, no database. Each page reads and writes the same JSON key.
-
-```js
-// Shared across all pages via templates/scripts.py
-getState()       // → { xp, level, hp, done[], answered{} }
-saveState(s)     // persists to localStorage
-clearState()     // called on "Begin Mission" and "Play Again"
-```
-
----
-
-## Game Pages (11 routes)
-
-| URL | Page |
-|---|---|
-| `/` or `/index.html` | Title screen → Begin Mission |
-| `/map.html` | Mission select map |
-| `/mission-1.html` | Mission 1: What Is PresentMon? |
-| `/mission-2.html` | Mission 2: The Frame Pipeline |
-| `/mission-3.html` | Mission 3: Metrics Deep Dive |
-| `/mission-4.html` | Mission 4: Present Modes |
-| `/mission-5.html` | Mission 5: Reading Raw Traces |
-| `/mission-6.html` | Mission 6: Diagnose & Fix |
-| `/mission-7.html` | Mission 7: Graphs & Stats |
-| `/mission-8.html` | Mission 8: The Final Mission |
-| `/win.html` | Certificate of Mastery |
-
----
-
-## Adding a New Mission
-
-1. **Add data** — append a `Mission` to `app/models/mission.py` and a `Quiz` to `app/models/quiz.py`
-2. **Add content** — add `_m8()` function in `app/views/missions.py`
-3. **Register route** — add `/mission-9.html` in `app/views/__init__.py`
-4. **Run tests** — `python tests/test_all.py`
 
 ---
 
 ## Running Tests
 
 ```bash
-# With stdlib unittest (no install needed)
-python tests/test_all.py
-
-# With pytest (optional)
-pip install pytest
-pytest tests/ -v
+python -m unittest discover tests
+# Expected: ...53 tests... OK
 ```
 
-43 tests covering models, templates, views, and server.
+---
+
+## GitHub
+
+Repository: [github.com/ThisIsNimishka/frame-detective](https://github.com/ThisIsNimishka/frame-detective)
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Backend | Python 3.10+ stdlib (http.server) |
+| Frontend | Vanilla HTML / CSS / JS — no frameworks |
+| Fonts | Google Fonts (Orbitron, Rajdhani) |
+| FX | Canvas starfield, CSS animations, Web Audio ready |
+
+---
+
+*"Every frame leaves a trace. You just have to know where to look."*
