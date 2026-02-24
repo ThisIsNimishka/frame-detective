@@ -5,6 +5,34 @@ SHARED_JS = r"""
    FRAME DETECTIVE — GAME ENGINE
 ══════════════════════════════════════════════════════════════ */
 
+/* ── SOUND ENGINE (Synthesized via Web Audio) ── */
+var _audioCtx = null;
+function initAudio() { if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+
+function playSynth(freq, type, dur, vol, slide) {
+  try {
+    initAudio();
+    if (_audioCtx.state === 'suspended') _audioCtx.resume();
+    var osc = _audioCtx.createOscillator();
+    var gain = _audioCtx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, _audioCtx.currentTime);
+    if (slide) osc.frequency.exponentialRampToValueAtTime(slide, _audioCtx.currentTime + dur);
+    gain.gain.setValueAtTime(vol || 0.1, _audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, _audioCtx.currentTime + dur);
+    osc.connect(gain); gain.connect(_audioCtx.destination);
+    osc.start(); osc.stop(_audioCtx.currentTime + dur);
+  } catch(e) {}
+}
+
+function playSound(name) {
+  if (name === 'click')      playSynth(440, 'square', 0.05, 0.05);
+  if (name === 'correct')    { playSynth(523, 'sine', 0.1, 0.1); setTimeout(function(){ playSynth(659, 'sine', 0.1, 0.1); }, 80); setTimeout(function(){ playSynth(783, 'sine', 0.2, 0.1); }, 160); }
+  if (name === 'wrong')      playSynth(150, 'sawtooth', 0.4, 0.1, 50);
+  if (name === 'levelup')    for(var i=0; i<4; i++) setTimeout(function(f){ return function(){ playSynth(f, 'square', 0.15, 0.08); }; }(440 + i*110), i*100);
+  if (name === 'achievement') { playSynth(880, 'sine', 0.1, 0.1); setTimeout(function(){ playSynth(1174, 'sine', 0.3, 0.1); }, 100); }
+}
+
 /* ── STATE ── */
 var _STATE_KEY = 'fd_state_v3';
 function defaultState() { return { xp:0, totalXP:0, level:1, hp:3, streak:0, bestStreak:0, done:[], badges:[] }; }
@@ -22,6 +50,7 @@ function addXP(amount) {
     s.xp -= _XP_PER_LEVEL; s.level = (s.level||1) + 1;
     spawnParticles(window.innerWidth/2, window.innerHeight/2, 30, ['#00e5ff','#ffe600','#39ff14','#ffffff']);
     showAchievement('⬆ LEVEL UP!', 'You reached Level ' + s.level + '!');
+    playSound('levelup');
   }
   saveState(s); renderHUD(); showXPPop('+' + amount + ' XP');
 }
@@ -35,6 +64,7 @@ function incrementStreak() {
 function loseHP() {
   var s = loadState(); s.hp = Math.max(0, (s.hp !== undefined ? s.hp : 3) - 1); s.streak = 0;
   saveState(s); renderHUD();
+  playSound('wrong');
   var fl = document.createElement('div'); fl.className = 'dmg-flash'; document.body.appendChild(fl);
   setTimeout(function(){ fl.remove(); }, 450);
   document.body.classList.add('screen-shake'); setTimeout(function(){ document.body.classList.remove('screen-shake'); }, 450);
@@ -139,6 +169,7 @@ function handleQuizAnswer(idx) {
 
   if (correct) {
     btn.classList.add('correct');
+    playSound('correct');
     addXP(_currentQuiz.xp + 50 + speedBonus);
     incrementStreak();
     markDone(_currentQuiz.mid);
@@ -188,6 +219,7 @@ function spawnConfetti() {
 }
 function showXPPop(t) { var e = document.createElement('div'); e.className = 'xp-popup'; e.textContent = t; document.body.appendChild(e); setTimeout(function(){ e.remove(); }, 2000); }
 function showAchievement(t, b) {
+  playSound('achievement');
   var e = document.createElement('div'); e.className = 'toast'; e.innerHTML = '<div class="toast-head">'+t+'</div><div class="toast-body">'+b+'</div>';
   document.body.appendChild(e); setTimeout(function(){ e.style.opacity='0'; }, 3000); setTimeout(function(){ e.remove(); }, 3400);
 }
@@ -197,6 +229,7 @@ function navigateTo(url) {
   else { window.location.href = url; }
 }
 document.addEventListener('click', function(e) {
+  playSound('click');
   var a = e.target.closest('a[href]'); if (!a) return;
   var h = a.getAttribute('href'); if (!h || h[0]==='#' || h.indexOf('http')===0 && h.indexOf(location.origin)!==0) return;
   e.preventDefault(); navigateTo(h);

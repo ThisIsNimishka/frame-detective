@@ -1,5 +1,6 @@
 """app/views/missions.py — One render function per mission."""
 import json
+import random
 from app.templates.base import base
 from app.templates.components import hud, briefing, card, pipeline, boss_section
 from app.models import MISSIONS, QUIZZES
@@ -24,7 +25,11 @@ def render_mission(idx: int) -> str:
     """Generic mission renderer — builds the correct page for mission idx (0-based)."""
     m = _M[idx]
     q = _QUIZ[idx]
-    opts = [(o.text, o.correct) for o in q.options]
+    
+    # Shuffle options for variety
+    opts = list(q.options)
+    random.shuffle(opts)
+    opts_tuple = [(o.text, o.correct) for o in opts]
 
     # Mission-specific teaching content
     content_blocks = _MISSION_CONTENT.get(idx, "")
@@ -32,7 +37,7 @@ def render_mission(idx: int) -> str:
     # Injected data script BEFORE HUD/components
     data_html = f"<script>{_quiz_data_js()}</script>"
 
-    body = data_html + hud(quit_href="map.html") + f"""
+    body = data_html + hud(quit_href="/quit") + f"""
 <div class="page-wrap">
   <div class="mission-hdr">
     <div>
@@ -42,13 +47,14 @@ def render_mission(idx: int) -> str:
     <a href="map.html" class="btn btn-ghost" style="margin-left:auto">← MAP</a>
   </div>
 
+  <div id="mission-description-target" style="display:none">{m.desc}</div>
   {briefing("AGENT DIRECTIVE", m.desc)}
 
   {content_blocks}
 
   {boss_section(
       m.id, m.boss_emoji, m.boss_name,
-      q.question, opts, m.next_page, m.xp,
+      q.question, opts_tuple, m.next_page, m.xp,
       q.hint, q.fun_fact
   )}
 </div>"""

@@ -200,8 +200,39 @@ body::after {
 .panel:nth-child(4) { animation-delay: 180ms; }
 .panel:nth-child(5) { animation-delay: 240ms; }
 @keyframes panel-in {
-  from { opacity:0; transform: translateY(18px); }
+  from { opacity:0; transform: translateY(10px); }
   to   { opacity:1; transform: translateY(0); }
+}
+
+/* ── PRINT CERTIFICATE FIX ── */
+@media print {
+  body { background: white !important; color: black !important; }
+  #bgcanvas, .hud, .win-actions, #page-veil, .radar-wrap, .radar-ring, .boss-arena::after {
+    display: none !important;
+  }
+  .page-wrap, .win-wrap { 
+    margin: 0 !important; 
+    padding: 0 !important; 
+    border: none !important; 
+    background: transparent !important;
+  }
+  .win-wrap {
+    display: block !important;
+    text-align: center;
+  }
+  .cert-name {
+    color: #000 !important;
+    border-bottom: 2px solid #000 !important;
+    text-shadow: none !important;
+  }
+  .stat-box {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    color: black !important;
+  }
+  .stat-box::before, .stat-box::after { display: none !important; }
+  .win-title { color: #000 !important; }
+  .badge-row span { filter: none !important; }
 }
 
 /* cyan corner brackets */
@@ -222,9 +253,13 @@ body::after {
 }
 
 .panel-head {
-  padding: 16px 22px 10px;
-  border-bottom: 1px solid rgba(0,229,255,.08);
-  display: flex; align-items: center; gap: 10px;
+  padding: 16px 24px;
+  background: rgba(0, 229, 255, 0.04);
+  border-bottom: 1px solid rgba(0, 229, 255, 0.15);
+  display: flex;
+  align-items: center;
+  /* Z-PATTERN FOCUS: nudge headers slightly to the right */
+  padding-left: 32px;
 }
 .panel-head::before {
   content: ''; width: 24px; height: 2px; flex-shrink: 0;
@@ -238,7 +273,11 @@ body::after {
   font-family: var(--font-h); font-size: 9px; letter-spacing: 3px;
   color: var(--cyan); white-space: nowrap; flex-shrink: 0;
 }
-.panel-body { padding: 18px 22px; }
+.panel-body {
+  padding: 30px 32px;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
 .panel-body p {
   color: rgba(224,240,255,.85); line-height: 1.78; margin-bottom: 12px;
   font-size: 15px;
@@ -445,7 +484,7 @@ body::after {
 /* Feedback */
 .quiz-feedback {
   display: none; margin: 0 18px 18px;
-  padding: 15px 18px; border-radius: 2px; border-left: 3px solid;
+  padding: 15px 18px; border-radius: 2px; border-left: 33px solid;
   line-height: 1.7; font-size: 14px;
   animation: feed-in .3s cubic-bezier(.16,1,.3,1) both;
 }
@@ -528,13 +567,27 @@ body::after {
   gap: 16px; margin-bottom: 24px;
 }
 .mcard {
-  position: relative; overflow: visible;
-  background: rgba(6,14,28,.9); border: 1px solid rgba(0,229,255,.1);
-  border-radius: 2px; padding: 20px 16px 18px;
-  text-align: center; text-decoration: none; display: block;
-  transition: all .22s; cursor: pointer;
+  background: rgba(4, 10, 22, 0.7);
+  border: 1px solid rgba(0, 229, 255, 0.1);
+  border-radius: 2px;
+  padding: 30px 20px;
+  text-align: center;
+  text-decoration: none;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
-.mcard::before {
+.mcard:hover:not(.locked) {
+  background: rgba(0, 229, 255, 0.05);
+  border-color: var(--cyan);
+  transform: translateY(-5px);
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
+}
+.mcard.locked { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
+.mcard.done { border-color: var(--green); }
   content: ''; position:absolute; inset:-1px; pointer-events:none;
   background:
     linear-gradient(var(--cyan),var(--cyan)) top left    /13px 2px,

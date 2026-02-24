@@ -1,4 +1,4 @@
-"""app/views/map.py — Mission selection map."""
+"""app/views/map.py — Mission select view."""
 from app.templates.base import base
 from app.templates.components import hud
 from app.models import MISSIONS
@@ -7,71 +7,70 @@ from app.models import MISSIONS
 def render_map() -> str:
     cards_html = ""
     for m in MISSIONS:
-        stars_html = "".join(
-            f'<span class="mc-star{"" if i < m.difficulty_stars else " dim"}">★</span>'
-            for i in range(3)
-        )
+        cls = "mcard"
         cards_html += f"""
-<a href="mission-{m.id + 1}.html" class="mcard" id="mc{m.id}"
-   data-mid="{m.id}" data-xp="{m.xp}">
-  <span class="mc-done" id="mc-done-{m.id}">✔ DONE</span>
-  <span class="mc-icon">{m.icon}</span>
-  <div class="mc-num">CASE {m.id + 1:02d}</div>
-  <div class="mc-name">{m.name}</div>
-  <div class="mc-desc">{m.desc}</div>
-  <div class="mc-meta">
-    <span class="mc-xp">+{m.xp} XP</span>
-    <span class="mc-stars">{stars_html}</span>
-  </div>
-  <div class="mc-flavor">&ldquo;{m.flavor_quote}&rdquo;</div>
-  <span class="mc-boss">{m.boss_emoji}</span>
-</a>"""
+    <a href="mission-{m.id+1}.html" class="{cls}" id="mc{m.id}">
+      <div id="mc-done-{m.id}" class="mc-done-badge" style="display:none">SOLVED</div>
+      <div id="mc-flavor-{m.id}" style="display:none">{m.flavor_quote}</div>
+      <div class="mc-icon">{m.icon}</div>
+      <div class="mc-name">{m.name}</div>
+      <div class="mc-sub">ZONE {m.id+1}</div>
+    </a>"""
 
-    body = hud(quit_href="index.html") + f"""
-<div class="map-page">
-<div class="map-inner">
-
-  <div class="map-heading">MISSION SELECT</div>
-  <div class="map-sub">CHOOSE YOUR NEXT CASE, AGENT</div>
-
-  <div class="map-progress">
-    <div id="map-prog-lbl">PROGRESS: 0 / 8 CASES</div>
-    <div class="map-prog-track">
-      <div id="map-prog-fill" style="width:0%"></div>
+    body = hud(quit_href="/quit") + f"""
+<div class="page-wrap">
+  <div class="map-header">
+    <div>
+      <h2 style="margin:0;color:var(--cyan);letter-spacing:2px;">MISSION SELECT</h2>
+      <div id="map-prog-lbl" style="font-size:12px;color:var(--muted);margin-top:5px;">PROGRESS: 0 / 8 CASES</div>
     </div>
+    <div class="map-prog-bg"><div id="map-prog-fill" class="map-prog-fill"></div></div>
   </div>
 
-  <div class="mission-grid">{cards_html}
+  <div class="mission-grid">
+    {cards_html}
   </div>
-
-  <div class="map-footer">
-    <a href="index.html" class="btn btn-ghost">← BACK</a>
-  </div>
-
-</div>
 </div>"""
 
     extra_js = """
 (function() {
   var s        = loadState();
   var done     = s.done || [];
+  
+  // Ensure we only count unique missions up to 8
+  var uniqueDone = [];
+  for(var k=0; k<done.length; k++) {
+    var mid = parseInt(done[k]);
+    if(uniqueDone.indexOf(mid) === -1 && mid < 8) uniqueDone.push(mid);
+  }
+  
   var total    = 8;
-  var pct      = Math.round(done.length / total * 100);
+  var pct      = Math.round(uniqueDone.length / total * 100);
   var fill     = document.getElementById('map-prog-fill');
   var lbl      = document.getElementById('map-prog-lbl');
   if (fill) fill.style.width = pct + '%';
-  if (lbl)  lbl.textContent  = 'PROGRESS: ' + done.length + ' / ' + total + ' CASES';
+  if (lbl)  lbl.textContent  = 'PROGRESS: ' + uniqueDone.length + ' / ' + total + ' CASES';
 
   /* Mark done and lock future missions */
-  for (var i = 0; i < total; i++) {
-    var card = document.getElementById('mc' + i);
-    var dnBadge = document.getElementById('mc-done-' + i);
+  var firstUncompleted = -1;
+  for (var i = 0; i < 8; i++) {
+    if (uniqueDone.indexOf(i) === -1) {
+      firstUncompleted = i;
+      break;
+    }
+  }
+
+  for (var j = 0; j < total; j++) {
+    var card = document.getElementById('mc' + j);
+    var dnBadge = document.getElementById('mc-done-' + j);
     if (!card) continue;
-    if (done.indexOf(i) !== -1) {
+    
+    if (uniqueDone.indexOf(j) !== -1) {
       card.classList.add('done');
       if (dnBadge) dnBadge.style.display = 'block';
-    } else if (i > 0 && done.indexOf(i - 1) === -1) {
+    } else if (firstUncompleted !== -1 && j > firstUncompleted) {
       card.classList.add('locked');
+      card.removeAttribute('href'); // Truly lock it
     }
   }
 })();

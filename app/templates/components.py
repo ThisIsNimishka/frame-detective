@@ -5,7 +5,7 @@ from app.models import MISSIONS
 
 
 # ── HUD ───────────────────────────────────────────────────────
-def hud(quit_href: str = "/") -> str:
+def hud(quit_href: str = "/quit") -> str:
     badges_html = "".join(
         f'<span id="bdg{m.id}" class="hud-badge-icon locked" title="{m.badge_name}">{m.badge}</span>'
         for m in MISSIONS

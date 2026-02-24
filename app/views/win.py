@@ -10,7 +10,7 @@ def render_win() -> str:
         for m in MISSIONS
     )
 
-    body = hud(quit_href="index.html") + f"""
+    body = hud(quit_href="/quit") + f"""
 <div class="win-wrap">
   <div class="win-trophy">🏆</div>
   <div class="win-title">CERTIFICATE OF MASTERY</div>
@@ -39,7 +39,7 @@ def render_win() -> str:
 
   <div class="win-actions">
     <button class="btn btn-green" onclick="window.print()">🖨 PRINT CERT</button>
-    <button class="btn btn-yellow" onclick="clearState();navigateTo('index.html')">▶ PLAY AGAIN</button>
+    <button class="btn btn-yellow" onclick="clearState();navigateTo('/')">▶ PLAY AGAIN</button>
     <a href="map.html" class="btn btn-ghost">← BACK TO MAP</a>
   </div>
 </div>"""
