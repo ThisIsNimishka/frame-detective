@@ -744,4 +744,122 @@ body::after{
 a{color:inherit;text-decoration:none;}
 .page-enter{animation:pageEnter .5s cubic-bezier(.16,1,.3,1) both;}
 .neon-cyan{color:var(--cyan);text-shadow:0 0 18px rgba(0,232,255,.6);}
+
+/* ════════════════════════════════════════════════════════════
+   MAP PAGE  (mcard / mgrid — matches map.py HTML)
+═════════════════════════════════════════════════════════════*/
+.page{position:relative;z-index:10;}
+.map-wrap{
+  max-width:1100px;margin:0 auto;padding:90px 22px 60px;
+  animation:pageEnter .5s cubic-bezier(.16,1,.3,1) both;
+}
+.map-title{
+  font-family:var(--font-game);font-size:clamp(16px,3vw,24px);
+  color:var(--white);letter-spacing:4px;margin-bottom:6px;
+  text-shadow:0 0 30px rgba(0,232,255,.4);
+}
+.map-sub{font-size:12px;color:var(--mid);letter-spacing:2px;margin-bottom:18px;}
+
+/* Progress bar */
+.map-progress{margin-bottom:22px;}
+.map-progress-lbl{font-family:var(--font-game);font-size:9px;color:var(--cyan2);letter-spacing:3px;margin-bottom:6px;}
+.map-progress-bar{height:6px;background:rgba(0,232,255,.08);border-radius:3px;overflow:hidden;border:1px solid rgba(0,232,255,.1);}
+.map-progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--cyan2),var(--cyan));
+  border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 0 12px rgba(0,232,255,.5);
+}
+
+/* Mission card grid */
+.mgrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+  gap:16px;margin-bottom:24px;
+}
+
+/* Individual mission card */
+.mcard{
+  position:relative;overflow:visible;
+  background:rgba(5,12,25,.9);
+  border:1px solid rgba(0,232,255,.1);
+  border-radius:2px;padding:20px 16px 18px;
+  text-align:center;text-decoration:none;display:block;
+  transition:all .22s;cursor:pointer;
+}
+/* corner brackets */
+.mcard::before{
+  content:'';position:absolute;inset:-1px;pointer-events:none;
+  background:
+    linear-gradient(var(--cyan),var(--cyan)) top    left  /14px 2px,
+    linear-gradient(var(--cyan),var(--cyan)) top    left  /2px 14px,
+    linear-gradient(var(--cyan),var(--cyan)) top    right /14px 2px,
+    linear-gradient(var(--cyan),var(--cyan)) top    right /2px 14px,
+    linear-gradient(var(--cyan),var(--cyan)) bottom left  /14px 2px,
+    linear-gradient(var(--cyan),var(--cyan)) bottom left  /2px 14px,
+    linear-gradient(var(--cyan),var(--cyan)) bottom right /14px 2px,
+    linear-gradient(var(--cyan),var(--cyan)) bottom right /2px 14px;
+  background-repeat:no-repeat;opacity:.45;transition:opacity .22s;
+}
+.mcard:hover:not(.locked)::before{opacity:.9;}
+.mcard:hover:not(.locked){
+  border-color:rgba(0,232,255,.35);
+  transform:translateY(-4px) scale(1.02);
+  box-shadow:0 12px 40px rgba(0,0,0,.5),0 0 28px rgba(0,232,255,.18);
+  background:rgba(0,232,255,.06);
+}
+/* locked */
+.mcard.locked{
+  pointer-events:none;opacity:.32;filter:grayscale(.9);
+}
+/* done */
+.mcard.done::before{
+  background:
+    linear-gradient(var(--green),var(--green)) top    left  /14px 2px,
+    linear-gradient(var(--green),var(--green)) top    left  /2px 14px,
+    linear-gradient(var(--green),var(--green)) top    right /14px 2px,
+    linear-gradient(var(--green),var(--green)) top    right /2px 14px,
+    linear-gradient(var(--green),var(--green)) bottom left  /14px 2px,
+    linear-gradient(var(--green),var(--green)) bottom left  /2px 14px,
+    linear-gradient(var(--green),var(--green)) bottom right /14px 2px,
+    linear-gradient(var(--green),var(--green)) bottom right /2px 14px;
+  background-repeat:no-repeat;
+}
+.mcard.available{border-color:rgba(0,232,255,.22);}
+
+/* Done check */
+.mcard-done{
+  display:none;position:absolute;top:8px;right:10px;
+  font-family:var(--font-game);font-size:8px;
+  color:var(--green);letter-spacing:1px;
+}
+/* Card content */
+.mcard-icon{font-size:36px;display:block;margin-bottom:10px;filter:drop-shadow(0 0 12px rgba(0,232,255,.45));}
+.mcard-num{font-family:var(--font-game);font-size:9px;color:var(--cyan2);letter-spacing:3px;margin-bottom:5px;}
+.mcard-name{font-family:var(--font-game);font-size:11px;color:var(--white);letter-spacing:1px;line-height:1.35;margin-bottom:6px;}
+.mcard-desc{font-size:11px;color:var(--mid);line-height:1.5;margin-bottom:10px;min-height:32px;}
+.mcard-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.mcard-xp{font-family:var(--font-game);font-size:10px;color:var(--yellow);letter-spacing:1px;}
+.mcard-stars{display:flex;gap:3px;}
+.mcard-star{font-size:12px;color:var(--yellow);}
+.mcard-star.dim{color:var(--border3);}
+.mcard-flavor{font-size:10px;color:var(--dim);font-style:italic;line-height:1.4;border-top:1px solid rgba(0,232,255,.06);padding-top:8px;margin-top:2px;}
+.boss-preview{position:absolute;bottom:8px;right:10px;font-size:14px;opacity:.5;}
+
+/* Map footer */
+.map-footer{display:flex;gap:12px;flex-wrap:wrap;padding-top:8px;}
+
+/* ════════════════════════════════════════════════════════════
+   MISC FIXES
+═════════════════════════════════════════════════════════════*/
+/* Duplicate text-decoration fix for hud-quit */
+.hud-quit{text-decoration:none;}
+/* btn-danger (reset button on map) */
+.btn-danger{
+  font-family:var(--font-game);font-size:10px;color:var(--red);
+  border:1px solid rgba(255,32,64,.28);background:rgba(255,32,64,.05);
+  padding:9px 20px;border-radius:2px;cursor:pointer;letter-spacing:2px;
+  clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);
+  transition:all .15s;
+}
+.btn-danger:hover{background:rgba(255,32,64,.15);border-color:var(--red);box-shadow:0 0 20px rgba(255,32,64,.3);}
 """
