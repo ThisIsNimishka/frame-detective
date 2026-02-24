@@ -1,0 +1,7 @@
+# Frame Detective — Python dependencies
+# Zero runtime dependencies. Pure stdlib.
+# Python 3.9+ required (uses dict type hints).
+#
+# Dev / testing only:
+pytest>=7.0          # optional: run tests with `pytest tests/ -v`
+                     # or without pytest: `python tests/test_all.py`
